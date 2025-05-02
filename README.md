@@ -1,9 +1,10 @@
-````markdown
 # ♟️ Jogo de Dama Tocantins
 
 Bem-vindo ao **Jogo de Dama Tocantins**, uma implementação do clássico jogo de damas utilizando o framework [Flame](https://flame-engine.org/), voltado para desenvolvimento de jogos 2D com Flutter.
 
 Este projeto reúne a lógica completa do jogo, interface gráfica intuitiva e uma inteligência artificial para partidas contra o computador.
+
+🎮 **[Jogue agora online!](https://damas-tocantins.netlify.app/)**
 
 ---
 
@@ -43,7 +44,7 @@ cd Jogo-de-Dama
 
 # Execute o projeto
 flutter run
-````
+```
 
 ---
 
@@ -96,9 +97,5 @@ Este projeto está licenciado sob a [MIT License](LICENSE).
 
 ## 🧑‍💻 Autor
 
-Desenvolvido por **Michael Douglas**
+Desenvolvido por **Michael Douglas**  
 🔗 [github.com/MichaelDouglasCA](https://github.com/MichaelDouglasCA)
-
----
-
-
