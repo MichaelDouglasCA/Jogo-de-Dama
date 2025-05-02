@@ -1,0 +1,33 @@
+name: dama
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flame: ^1.23.0
+  cupertino_icons: ^1.0.8
+  audioplayers: ^6.2.0
+  flame_audio: ^2.11.0
+  url_launcher: ^6.0.20
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/assets/audio/move.mp3
+    - assets/assets/audio/capture.mp3
+    - assets/assets/audio/promote.mp3
+    - assets/assets/audio/win.mp3
+    - assets/assets/audio/background_music.mp3
+    - assets/assets/audio/click.mp3
