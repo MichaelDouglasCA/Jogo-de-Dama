@@ -101,5 +101,7 @@ Este projeto está licenciado sob a [MIT License](LICENSE).
 
 ## 🧑‍💻 Autor
 
-Desenvolvido por **Michael Douglas**  
+Desenvolvido por **Michael Douglas** e **3d5onLP**  
+
 🔗 [github.com/MichaelDouglasCA](https://github.com/MichaelDouglasCA)
+🔗 [github.com/3d5onLP](https://github.com/3d5onLP)
