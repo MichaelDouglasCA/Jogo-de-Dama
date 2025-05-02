@@ -1,5 +1,7 @@
 // Autor: Michael Douglas
 // GitHub: https://github.com/MichaelDouglasCA
+// Descrição: Implementação de um jogo de damas usando o framework Flame.
+// Este arquivo contém a lógica do jogo, interface gráfica e IA para partidas contra o computador.
 
 import 'dart:async';
 import 'dart:math';
@@ -10,11 +12,12 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+// Classe que representa um movimento no jogo de damas.
 class Move {
-  final Offset from;
-  final Offset to;
-  final bool isCapture;
-  final List<Offset> capturedPieces;
+  final Offset from; // Posição inicial da peça.
+  final Offset to; // Posição final da peça.
+  final bool isCapture; // Indica se o movimento é uma captura.
+  final List<Offset> capturedPieces; // Lista de posições das peças capturadas.
 
   Move(
     this.from,
@@ -24,50 +27,56 @@ class Move {
   });
 }
 
+// Classe principal do jogo, que estende FlameGame para gerenciar o estado e a renderização.
 class MyGame extends FlameGame {
-  static const int boardSize = 8;
-  double tileSize = 80.0;
+  static const int boardSize = 8; // Tamanho do tabuleiro (8x8).
+  double tileSize = 80.0; // Tamanho de cada casa do tabuleiro em pixels.
+  // Representação do tabuleiro como uma matriz 8x8.
+  // 0: casa vazia, 1: peça do jogador 1, 2: peça do jogador 2, 3: dama do jogador 1, 4: dama do jogador 2.
   List<List<int>> board = List.generate(
     boardSize,
     (i) => List.filled(boardSize, 0),
   );
-  int currentPlayer = 1;
-  Offset? selectedPiece;
-  List<Move> validMoves = [];
-  bool gameOver = false;
-  String winner = '';
-  Offset? movingPiece;
-  Offset? targetPosition;
-  double animationProgress = 0.0;
-  bool isAnimating = false;
-  bool isPlayerVsAI = false;
-  bool isAITurn = false;
-  bool isAIThinking = false;
-  int player1Score = 0;
-  int player2Score = 0;
-  List<String> matchHistory = [];
-  int player1Pieces = 12;
-  int player2Pieces = 12;
-  int player1Captured = 0;
-  int player2Captured = 0;
-  String aiDifficulty = 'normal';
-  bool gameStarted = false;
-  bool hasUserInteracted = false;
+  int currentPlayer = 1; // Jogador atual (1 ou 2).
+  Offset? selectedPiece; // Posição da peça selecionada.
+  List<Move> validMoves = []; // Lista de movimentos válidos para a peça selecionada.
+  bool gameOver = false; // Indica se o jogo terminou.
+  String winner = ''; // Nome do vencedor.
+  Offset? movingPiece; // Posição da peça em animação.
+  Offset? targetPosition; // Posição alvo da peça em animação.
+  double animationProgress = 0.0; // Progresso da animação de movimento (0.0 a 1.0).
+  bool isAnimating = false; // Indica se uma animação está em andamento.
+  bool isPlayerVsAI = false; // Modo de jogo (true para jogador vs IA).
+  bool isAITurn = false; // Indica se é o turno da IA.
+  bool isAIThinking = false; // Indica se a IA está processando um movimento.
+  int player1Score = 0; // Pontuação do jogador 1.
+  int player2Score = 0; // Pontuação do jogador 2.
+  List<String> matchHistory = []; // Histórico de resultados das partidas.
+  int player1Pieces = 12; // Número de peças restantes do jogador 1.
+  int player2Pieces = 12; // Número de peças restantes do jogador 2.
+  int player1Captured = 0; // Peças capturadas pelo jogador 2.
+  int player2Captured = 0; // Peças capturadas pelo jogador 1.
+  String aiDifficulty = 'normal'; // Nível de dificuldade da IA ('easy', 'normal', 'hard').
+  bool gameStarted = false; // Indica se o jogo foi iniciado.
+  bool hasUserInteracted = false; // Verifica se o usuário interagiu para iniciar a música.
 
-  double offsetX = 0;
-  double offsetY = 0;
+  double offsetX = 0; // Deslocamento horizontal do tabuleiro.
+  double offsetY = 0; // Deslocamento vertical do tabuleiro.
 
-  static const int PIECE_VALUE = 10;
-  static const int KING_VALUE = 30;
-  static const int POSITION_BONUS = 2;
-  static const int CAPTURE_BONUS = 50;
-  static const int CENTER_CONTROL_BONUS = 5;
-  static const int PROTECTED_PIECE_BONUS = 3;
+  // Constantes para avaliação do tabuleiro pela IA.
+  static const int PIECE_VALUE = 10; // Valor de uma peça comum.
+  static const int KING_VALUE = 30; // Valor de uma dama.
+  static const int POSITION_BONUS = 2; // Bônus por posição avançada.
+  static const int CAPTURE_BONUS = 50; // Bônus por captura.
+  static const int CENTER_CONTROL_BONUS = 5; // Bônus por controle do centro.
+  static const int PROTECTED_PIECE_BONUS = 3; // Bônus por peça protegida.
 
+  // Método chamado quando o jogo é carregado.
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    initializeBoard();
+    initializeBoard(); // Inicializa o tabuleiro.
+    // Carrega os arquivos de áudio.
     try {
       await FlameAudio.audioCache.loadAll([
         'move.mp3',
@@ -80,11 +89,12 @@ class MyGame extends FlameGame {
     } catch (e) {
       print('Erro ao carregar áudios: $e');
     }
-    calculateOffsets();
-    overlays.add('MainMenu');
+    calculateOffsets(); // Calcula os deslocamentos do tabuleiro.
+    overlays.add('MainMenu'); // Exibe o menu principal.
     print('Jogo carregado, Player 1 começa (música ainda não iniciada).');
   }
 
+  // Inicia a música de fundo após a primeira interação do usuário.
   void startBackgroundMusic() {
     if (!hasUserInteracted) {
       try {
@@ -97,6 +107,7 @@ class MyGame extends FlameGame {
     }
   }
 
+  // Calcula os deslocamentos para centralizar o tabuleiro na tela.
   void calculateOffsets() {
     double boardWidth = boardSize * tileSize;
     double boardHeight = boardSize * tileSize;
@@ -104,14 +115,16 @@ class MyGame extends FlameGame {
     offsetY = (size.y - boardHeight) / 2;
   }
 
+  // Inicializa o tabuleiro com as peças nas posições iniciais.
   void initializeBoard() {
     for (int i = 0; i < boardSize; i++) {
       for (int j = 0; j < boardSize; j++) {
-        if ((i + j) % 2 == 1) {
+        if ((i + j) % 2 == 1) { // Apenas casas escuras.
           if (i < 3) {
-            board[i][j] = isPlayerVsAI ? 2 : 1;
-          } else if (i > 4)
-            board[i][j] = isPlayerVsAI ? 1 : 2;
+            board[i][j] = isPlayerVsAI ? 2 : 1; // Peças do jogador 2 ou IA.
+          } else if (i > 4) {
+            board[i][j] = isPlayerVsAI ? 1 : 2; // Peças do jogador 1.
+          }
         }
       }
     }
@@ -124,6 +137,7 @@ class MyGame extends FlameGame {
     print('Tabuleiro inicializado, turno do Player 1');
   }
 
+  // Reinicia o jogo, restaurando o estado inicial.
   void resetGame() {
     board = List.generate(boardSize, (i) => List.filled(boardSize, 0));
     currentPlayer = 1;
@@ -142,6 +156,7 @@ class MyGame extends FlameGame {
     print('Jogo resetado, Player 1 começa');
   }
 
+  // Ajusta o tamanho do tabuleiro quando a janela é redimensionada.
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
@@ -158,7 +173,7 @@ class MyGame extends FlameGame {
     }
   }
 
-  @override
+  // Renderiza os elementos visuais do jogo.
   @override
   void render(Canvas canvas) {
     super.render(canvas);
@@ -166,27 +181,26 @@ class MyGame extends FlameGame {
         !overlays.isActive('History') &&
         !overlays.isActive('DifficultyMenu') &&
         !overlays.isActive('About')) {
-      drawBoard(canvas);
-      drawPieces(canvas);
-      drawValidMoves(canvas);
-      if (gameOver) drawGameOver(canvas);
-      drawScoreboard(canvas);
-      drawPlayerTurnIndicator(canvas);
-      if (isAIThinking) drawAIThinking(canvas);
+      drawBoard(canvas); // Desenha o tabuleiro.
+      drawPieces(canvas); // Desenha as peças.
+      drawValidMoves(canvas); // Desenha os movimentos válidos.
+      if (gameOver) drawGameOver(canvas); // Exibe a tela de fim de jogo.
+      drawScoreboard(canvas); // Desenha o placar.
+      drawPlayerTurnIndicator(canvas); // Indica o turno atual.
+      if (isAIThinking) drawAIThinking(canvas); // Mostra que a IA está pensando.
     }
   }
 
+  // Desenha o tabuleiro com casas claras e escuras.
   void drawBoard(Canvas canvas) {
     final paint = Paint();
-    final borderPaint =
-        Paint()
-          ..color = Colors.yellow[700]!
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 4.0;
+    final borderPaint = Paint()
+      ..color = Colors.yellow[700]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4.0;
     for (int i = 0; i < boardSize; i++) {
       for (int j = 0; j < boardSize; j++) {
-        paint.color =
-            (i + j) % 2 == 0 ? Colors.brown[200]! : Colors.brown[400]!;
+        paint.color = (i + j) % 2 == 0 ? Colors.brown[200]! : Colors.brown[400]!;
         canvas.drawRect(
           Rect.fromLTWH(
             offsetX + j * tileSize,
@@ -198,6 +212,7 @@ class MyGame extends FlameGame {
         );
       }
     }
+    // Desenha a borda do tabuleiro.
     canvas.drawRect(
       Rect.fromLTWH(
         offsetX,
@@ -209,24 +224,22 @@ class MyGame extends FlameGame {
     );
   }
 
+  // Desenha as peças no tabuleiro, incluindo animações de movimento.
   void drawPieces(Canvas canvas) {
     final paint = Paint();
-    final borderPaint =
-        Paint()
-          ..color = Colors.yellow
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3.0;
+    final borderPaint = Paint()
+      ..color = Colors.yellow
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0;
 
     for (int i = 0; i < boardSize; i++) {
       for (int j = 0; j < boardSize; j++) {
         if (board[i][j] != 0) {
           bool isCurrentPlayerPiece =
-              (board[i][j] == currentPlayer ||
-                  board[i][j] == currentPlayer + 2);
-          paint.color =
-              (board[i][j] == 1 || board[i][j] == 3)
-                  ? Colors.red
-                  : Colors.black;
+              (board[i][j] == currentPlayer || board[i][j] == currentPlayer + 2);
+          paint.color = (board[i][j] == 1 || board[i][j] == 3)
+              ? Colors.red
+              : Colors.black;
           canvas.drawCircle(
             Offset(
               offsetX + j * tileSize + tileSize / 2,
@@ -235,7 +248,7 @@ class MyGame extends FlameGame {
             tileSize / 2.5,
             paint,
           );
-          if (board[i][j] == 3 || board[i][j] == 4) {
+          if (board[i][j] == 3 || board[i][j] == 4) { // Desenha o centro da dama.
             paint.color = Colors.yellow;
             canvas.drawCircle(
               Offset(
@@ -246,7 +259,7 @@ class MyGame extends FlameGame {
               paint,
             );
           }
-          if (isCurrentPlayerPiece) {
+          if (isCurrentPlayerPiece) { // Destaca a peça do jogador atual.
             canvas.drawCircle(
               Offset(
                 offsetX + j * tileSize + tileSize / 2,
@@ -259,13 +272,12 @@ class MyGame extends FlameGame {
         }
       }
     }
+    // Desenha a peça em movimento durante a animação.
     if (isAnimating && movingPiece != null && targetPosition != null) {
       final currentX =
-          movingPiece!.dx +
-          (targetPosition!.dx - movingPiece!.dx) * animationProgress;
+          movingPiece!.dx + (targetPosition!.dx - movingPiece!.dx) * animationProgress;
       final currentY =
-          movingPiece!.dy +
-          (targetPosition!.dy - movingPiece!.dy) * animationProgress;
+          movingPiece!.dy + (targetPosition!.dy - movingPiece!.dy) * animationProgress;
       paint.color =
           board[targetPosition!.dy.toInt()][targetPosition!.dx.toInt()] == 1
               ? Colors.red
@@ -289,6 +301,7 @@ class MyGame extends FlameGame {
     }
   }
 
+  // Desenha indicadores visuais para movimentos válidos.
   void drawValidMoves(Canvas canvas) {
     final paint = Paint()..color = Colors.blue.withOpacity(0.5);
     for (var move in validMoves) {
@@ -303,6 +316,7 @@ class MyGame extends FlameGame {
     }
   }
 
+  // Exibe a mensagem de fim de jogo com o vencedor.
   void drawGameOver(Canvas canvas) {
     final textPainter = TextPainter(
       text: TextSpan(
@@ -322,26 +336,26 @@ class MyGame extends FlameGame {
     );
   }
 
+  // Desenha o placar com informações dos jogadores.
   void drawScoreboard(Canvas canvas) {
     final scoreboardX = offsetX + tileSize * boardSize + 20;
     final scoreboardWidth = 260;
     final scoreboardHeight = tileSize * boardSize + 60;
 
-    final paint =
-        Paint()
-          ..shader = LinearGradient(
-            colors: [Colors.brown[900]!, Colors.brown[600]!],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ).createShader(
-            Rect.fromLTWH(0, 0, scoreboardWidth as double, scoreboardHeight),
-          );
-    final borderPaint =
-        Paint()
-          ..color = Colors.yellow[800]!
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 5.0;
+    final paint = Paint()
+      ..shader = LinearGradient(
+        colors: [Colors.brown[900]!, Colors.brown[600]!],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(
+        Rect.fromLTWH(0, 0, scoreboardWidth as double, scoreboardHeight),
+      );
+    final borderPaint = Paint()
+      ..color = Colors.yellow[800]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5.0;
 
+    // Desenha o fundo do placar.
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(
@@ -367,6 +381,7 @@ class MyGame extends FlameGame {
       borderPaint,
     );
 
+    // Título do placar.
     final titlePainter = TextPainter(
       text: TextSpan(
         text: 'Placar',
@@ -391,13 +406,13 @@ class MyGame extends FlameGame {
       ),
     );
 
-    final player1BoxPaint =
-        Paint()
-          ..shader = LinearGradient(
-            colors: [Colors.red[900]!, Colors.red[700]!],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ).createShader(Rect.fromLTWH(0, 0, scoreboardWidth - 40, 200));
+    // Placar do jogador 1.
+    final player1BoxPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [Colors.red[900]!, Colors.red[700]!],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, scoreboardWidth - 40, 200));
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(
@@ -448,6 +463,7 @@ class MyGame extends FlameGame {
       ),
     );
 
+    // Peças capturadas do jogador 2.
     final piecePaintPlayer1 = Paint()..color = Colors.black;
     for (int i = 0; i < player2Captured; i++) {
       int row = i ~/ 6;
@@ -468,13 +484,13 @@ class MyGame extends FlameGame {
       );
     }
 
-    final player2BoxPaint =
-        Paint()
-          ..shader = LinearGradient(
-            colors: [Colors.grey[900]!, Colors.grey[700]!],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ).createShader(Rect.fromLTWH(0, 0, scoreboardWidth - 40, 200));
+    // Placar do jogador 2.
+    final player2BoxPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [Colors.grey[900]!, Colors.grey[700]!],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, scoreboardWidth - 40, 200));
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(
@@ -525,6 +541,7 @@ class MyGame extends FlameGame {
       ),
     );
 
+    // Peças capturadas do jogador 1.
     final piecePaintPlayer2 = Paint()..color = Colors.red;
     for (int i = 0; i < player1Captured; i++) {
       int row = i ~/ 6;
@@ -545,13 +562,13 @@ class MyGame extends FlameGame {
       );
     }
 
-    final buttonPaint =
-        Paint()
-          ..shader = LinearGradient(
-            colors: [Colors.red[900]!, Colors.red[600]!],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ).createShader(Rect.fromLTWH(0, 0, scoreboardWidth - 40, 50));
+    // Botão "Voltar ao Menu".
+    final buttonPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [Colors.red[900]!, Colors.red[600]!],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, scoreboardWidth - 40, 50));
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(
@@ -586,31 +603,26 @@ class MyGame extends FlameGame {
     );
   }
 
+  // Desenha o indicador do turno atual.
   void drawPlayerTurnIndicator(Canvas canvas) {
-    final paint =
-        Paint()
-          ..shader = LinearGradient(
-            colors:
-                currentPlayer == 1
-                    ? [Colors.red[900]!, Colors.red[600]!]
-                    : [Colors.black, Colors.grey[800]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ).createShader(Rect.fromLTWH(0, 0, 240, 100));
-    final borderPaint =
-        Paint()
-          ..color = Colors.yellow[700]!
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3.0;
+    final paint = Paint()
+      ..shader = LinearGradient(
+        colors: currentPlayer == 1
+            ? [Colors.red[900]!, Colors.red[600]!]
+            : [Colors.black, Colors.grey[800]!],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ).createShader(Rect.fromLTWH(0, 0, 240, 100));
+    final borderPaint = Paint()
+      ..color = Colors.yellow[700]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0;
 
     final textPainter = TextPainter(
       text: TextSpan(
-        text:
-            isPlayerVsAI
-                ? (currentPlayer == 1
-                    ? 'Vez do Jogador\n(Vermelhas)'
-                    : 'Vez da IA\n(Pretas)')
-                : 'Vez do Jogador $currentPlayer',
+        text: isPlayerVsAI
+            ? (currentPlayer == 1 ? 'Vez do Jogador\n(Vermelhas)' : 'Vez da IA\n(Pretas)')
+            : 'Vez do Jogador $currentPlayer',
         style: TextStyle(
           color: Colors.white,
           fontSize: 24,
@@ -666,6 +678,7 @@ class MyGame extends FlameGame {
     );
   }
 
+  // Exibe a mensagem "IA Pensando..." durante o turno da IA.
   void drawAIThinking(Canvas canvas) {
     final textPainter = TextPainter(
       text: TextSpan(
@@ -682,19 +695,21 @@ class MyGame extends FlameGame {
     );
   }
 
+  // Atualiza o estado do jogo a cada frame.
   @override
   void update(double dt) {
     super.update(dt);
     if (isAnimating) {
-      animationProgress += dt * 4;
+      animationProgress += dt * 4; // Avança a animação.
       if (animationProgress >= 1.0) {
         animationProgress = 0.0;
         isAnimating = false;
-        completeMove();
+        completeMove(); // Finaliza o movimento.
         print('Animação concluída, turno do Player $currentPlayer');
       }
     }
 
+    // Inicia o turno da IA, se aplicável.
     if (isPlayerVsAI &&
         currentPlayer == 2 &&
         !isAnimating &&
@@ -707,14 +722,17 @@ class MyGame extends FlameGame {
       _makeAIMoveAsync();
     }
 
+    // Verifica se há um vencedor.
     if (!gameOver) checkForWin();
   }
 
+  // Gerencia os eventos de toque na tela.
   void onTapDown(TapDownDetails details) {
     if (!hasUserInteracted) {
-      startBackgroundMusic();
+      startBackgroundMusic(); // Inicia a música na primeira interação.
     }
 
+    // Ignora toques se um overlay está ativo.
     if (overlays.isActive('MainMenu') ||
         overlays.isActive('History') ||
         overlays.isActive('DifficultyMenu') ||
@@ -732,6 +750,7 @@ class MyGame extends FlameGame {
     final x = details.localPosition.dx;
     final y = details.localPosition.dy;
 
+    // Verifica se o toque foi no botão "Voltar ao Menu".
     final scoreboardX = offsetX + tileSize * boardSize + 20;
     if (x > scoreboardX + 20 &&
         x < scoreboardX + 240 &&
@@ -742,6 +761,7 @@ class MyGame extends FlameGame {
       return;
     }
 
+    // Ignora toques durante estados inválidos.
     if (gameOver ||
         isAnimating ||
         (isPlayerVsAI && currentPlayer == 2 && !gameStarted)) {
@@ -751,6 +771,7 @@ class MyGame extends FlameGame {
       return;
     }
 
+    // Converte as coordenadas do toque em índices do tabuleiro.
     final boardX = ((x - offsetX) / tileSize).floor();
     final boardY = ((y - offsetY) / tileSize).floor();
 
@@ -764,6 +785,7 @@ class MyGame extends FlameGame {
 
     print('Toque em ($boardX, $boardY) pelo Player $currentPlayer');
 
+    // Seleciona uma peça ou executa um movimento.
     if (selectedPiece == null) {
       if (board[boardY][boardX] == currentPlayer ||
           board[boardY][boardX] == currentPlayer + 2) {
@@ -790,6 +812,7 @@ class MyGame extends FlameGame {
     }
   }
 
+  // Inicia a animação de movimento de uma peça.
   void startAnimation(int fromX, int fromY, int toX, int toY) {
     movingPiece = Offset(fromX.toDouble(), fromY.toDouble());
     targetPosition = Offset(toX.toDouble(), toY.toDouble());
@@ -798,6 +821,7 @@ class MyGame extends FlameGame {
     print('Animação iniciada de ($fromX, $fromY) para ($toX, $toY)');
   }
 
+  // Finaliza um movimento após a animação.
   void completeMove() {
     if (movingPiece == null || targetPosition == null) return;
 
@@ -810,16 +834,17 @@ class MyGame extends FlameGame {
       (m) =>
           m.from == Offset(fromX.toDouble(), fromY.toDouble()) &&
           m.to == Offset(toX.toDouble(), toY.toDouble()),
-      orElse:
-          () => Move(
+      orElse: () => Move(
             Offset(fromX.toDouble(), fromY.toDouble()),
             Offset(toX.toDouble(), toY.toDouble()),
           ),
     );
 
+    // Move a peça no tabuleiro.
     board[toY][toX] = board[fromY][fromX];
     board[fromY][fromX] = 0;
 
+    // Processa capturas, se houver.
     if (move.isCapture && move.capturedPieces.isNotEmpty) {
       for (var captured in move.capturedPieces) {
         int midX = captured.dx.toInt();
@@ -827,10 +852,10 @@ class MyGame extends FlameGame {
         if (board[midY][midX] != 0) {
           board[midY][midX] = 0;
           if (currentPlayer == 1) {
-            player2Pieces--; // Corrigido
+            player2Pieces--;
             player2Captured++;
           } else {
-            player1Pieces--; // Corrigido
+            player1Pieces--;
             player1Captured++;
           }
           try {
@@ -841,12 +866,12 @@ class MyGame extends FlameGame {
           addParticleEffect(midX, midY);
         }
       }
-      // Verificar se há mais capturas disponíveis antes de mudar o turno
+      // Verifica se há mais capturas disponíveis.
       selectedPiece = Offset(toX.toDouble(), toY.toDouble());
       calculateValidMoves(toX, toY);
       if (validMoves.any((m) => m.isCapture)) {
         print('Mais capturas disponíveis para o Player $currentPlayer');
-        return; // Não muda o turno ainda
+        return; // Não muda o turno ainda.
       }
     } else {
       try {
@@ -856,6 +881,7 @@ class MyGame extends FlameGame {
       }
     }
 
+    // Verifica promoções e muda o turno.
     checkForPromotion(toY);
     currentPlayer = currentPlayer == 1 ? 2 : 1;
     selectedPiece = null;
@@ -864,6 +890,7 @@ class MyGame extends FlameGame {
     targetPosition = null;
   }
 
+  // Adiciona um efeito de partículas na captura de uma peça.
   void addParticleEffect(int x, int y) {
     final particle = ParticleSystemComponent(
       position: Vector2(
@@ -873,14 +900,13 @@ class MyGame extends FlameGame {
       particle: Particle.generate(
         count: 10,
         lifespan: 0.5,
-        generator:
-            (i) =>
-                CircleParticle(radius: 5, paint: Paint()..color = Colors.white),
+        generator: (i) => CircleParticle(radius: 5, paint: Paint()..color = Colors.white),
       ),
     );
     add(particle);
   }
 
+  // Calcula os movimentos válidos para uma peça.
   void calculateValidMoves(int x, int y) {
     validMoves.clear();
     int piece = board[y][x];
@@ -892,6 +918,7 @@ class MyGame extends FlameGame {
       [1, 1], // Baixo-direita
     ];
 
+    // Função recursiva para encontrar movimentos e capturas.
     void findMoves(
       int currentX,
       int currentY,
@@ -900,7 +927,7 @@ class MyGame extends FlameGame {
       bool hasCaptured,
     ) {
       String currentPos = '$currentX,$currentY';
-      if (visited.contains(currentPos)) return; // Evita ciclos
+      if (visited.contains(currentPos)) return;
       visited.add(currentPos);
 
       if (!isKing) {
@@ -910,7 +937,7 @@ class MyGame extends FlameGame {
           int newX = currentX + dx;
           int newY = currentY + dy;
 
-          // Movimento simples (uma casa) só se não houver capturas ainda
+          // Movimento simples (uma casa).
           if (!hasCaptured &&
               newX >= 0 &&
               newX < boardSize &&
@@ -925,7 +952,7 @@ class MyGame extends FlameGame {
             );
           }
 
-          // Captura (saltar sobre uma peça inimiga)
+          // Captura (saltar sobre peça inimiga).
           int captureX = currentX + dx * 2;
           int captureY = currentY + dy * 2;
           int midX = currentX + dx;
@@ -957,6 +984,7 @@ class MyGame extends FlameGame {
           int newX = currentX;
           int newY = currentY;
 
+          // Movimento de dama (múltiplas casas na mesma direção).
           while (true) {
             newX += dx;
             newY += dy;
@@ -1006,11 +1034,12 @@ class MyGame extends FlameGame {
     findMoves(x, y, [], {}, false);
   }
 
+  // Executa o movimento da IA de forma assíncrona.
   Future<void> _makeAIMoveAsync() async {
     if (isAIThinking) return;
     isAIThinking = true;
     print('IA pensando...');
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 500)); // Simula tempo de pensamento.
     Move? bestMove = await findBestMoveWithTimeout();
     isAIThinking = false;
 
@@ -1020,9 +1049,11 @@ class MyGame extends FlameGame {
       int toX = bestMove.to.dx.toInt();
       int toY = bestMove.to.dy.toInt();
 
+      // Aplica o movimento.
       board[toY][toX] = board[fromY][fromX];
       board[fromY][fromX] = 0;
 
+      // Processa capturas.
       if (bestMove.isCapture && bestMove.capturedPieces.isNotEmpty) {
         for (var captured in bestMove.capturedPieces) {
           int midX = captured.dx.toInt();
@@ -1060,6 +1091,7 @@ class MyGame extends FlameGame {
     isAITurn = false;
   }
 
+  // Encontra o melhor movimento para a IA com limite de tempo.
   Future<Move?> findBestMoveWithTimeout() async {
     List<Move> allMoves = getAllPossibleMoves(board, 2);
     if (allMoves.isEmpty) {
@@ -1095,6 +1127,7 @@ class MyGame extends FlameGame {
         timeout = Duration(seconds: 2);
     }
 
+    // Prioriza capturas, se disponíveis.
     if (captureMoves.isNotEmpty) {
       Move? bestCaptureMove;
       int bestScore = -9999;
@@ -1110,13 +1143,13 @@ class MyGame extends FlameGame {
           bestCaptureMove = move;
         }
       }
-      return bestCaptureMove ??
-          captureMoves[Random().nextInt(captureMoves.length)];
+      return bestCaptureMove ?? captureMoves[Random().nextInt(captureMoves.length)];
     }
 
     Move? bestMove;
     int bestScore = -9999;
 
+    // Avalia todos os movimentos com limite de tempo.
     try {
       return await Future.any([
         Future(() async {
@@ -1145,6 +1178,7 @@ class MyGame extends FlameGame {
     }
   }
 
+  // Algoritmo Alpha-Beta para avaliar movimentos da IA.
   int alphaBeta(
     List<List<int>> board,
     int depth,
@@ -1186,6 +1220,7 @@ class MyGame extends FlameGame {
     }
   }
 
+  // Obtém todos os movimentos possíveis para um jogador.
   List<Move> getAllPossibleMoves(List<List<int>> board, int player) {
     List<Move> moves = [];
     List<Move> captureMoves = [];
@@ -1203,6 +1238,7 @@ class MyGame extends FlameGame {
     return captureMoves.isNotEmpty ? captureMoves : moves;
   }
 
+  // Avalia o tabuleiro para a IA, considerando peças, posições e capturas.
   int evaluateBoard(List<List<int>> board) {
     int score = 0;
 
@@ -1232,6 +1268,7 @@ class MyGame extends FlameGame {
     return score;
   }
 
+  // Verifica se uma peça está protegida por outra peça aliada.
   bool isProtected(int x, int y, List<List<int>> board, int player) {
     int direction = (player == 1 || player == 3) ? 1 : -1;
     List<List<int>> directions = [
@@ -1253,6 +1290,7 @@ class MyGame extends FlameGame {
     return false;
   }
 
+  // Aplica um movimento ao tabuleiro.
   void applyMove(List<List<int>> board, Move move) {
     int fromX = move.from.dx.toInt();
     int fromY = move.from.dy.toInt();
@@ -1270,6 +1308,7 @@ class MyGame extends FlameGame {
       }
     }
 
+    // Promove peças, se necessário.
     if (board[toY][toX] == 2 && toY == 0) {
       board[toY][toX] = 4;
     } else if (board[toY][toX] == 1 && toY == boardSize - 1) {
@@ -1277,10 +1316,12 @@ class MyGame extends FlameGame {
     }
   }
 
+  // Clona o tabuleiro para simulações da IA.
   List<List<int>> cloneBoard(List<List<int>> board) {
     return board.map((row) => List<int>.from(row)).toList();
   }
 
+  // Verifica se o jogo terminou (um jogador sem peças).
   bool isGameOver(List<List<int>> board) {
     int player1Pieces = 0;
     int player2Pieces = 0;
@@ -1295,6 +1336,7 @@ class MyGame extends FlameGame {
     return player1Pieces == 0 || player2Pieces == 0;
   }
 
+  // Verifica e aplica promoções de peças a damas.
   void checkForPromotion(int y) {
     for (int x = 0; x < boardSize; x++) {
       if (board[y][x] == 1 && y == 0) {
@@ -1315,6 +1357,7 @@ class MyGame extends FlameGame {
     }
   }
 
+  // Verifica se há um vencedor e atualiza o estado do jogo.
   void checkForWin() {
     if (player1Pieces == 0) {
       gameOver = true;
@@ -1342,6 +1385,7 @@ class MyGame extends FlameGame {
   }
 }
 
+// Função principal que inicializa o aplicativo Flutter.
 void main() {
   final myGame = MyGame();
   runApp(
@@ -1359,21 +1403,10 @@ void main() {
             child: GameWidget(
               game: myGame,
               overlayBuilderMap: {
-                'MainMenu':
-                    (context, game) =>
-                        buildOverlay(context, game as MyGame, 'MainMenu'),
-                'DifficultyMenu':
-                    (context, game) =>
-                        buildOverlay(context, game as MyGame, 'DifficultyMenu'),
-                'History':
-                    (context, game) =>
-                        buildOverlay(context, game as MyGame, 'History'),
-                'About':
-                    (context, game) => buildOverlay(
-                      context,
-                      game as MyGame,
-                      'About',
-                    ), // Corrigido explicitamente
+                'MainMenu': (context, game) => buildOverlay(context, game as MyGame, 'MainMenu'),
+                'DifficultyMenu': (context, game) => buildOverlay(context, game as MyGame, 'DifficultyMenu'),
+                'History': (context, game) => buildOverlay(context, game as MyGame, 'History'),
+                'About': (context, game) => buildOverlay(context, game as MyGame, 'About'),
               },
               initialActiveOverlays: const ['MainMenu'],
             ),
@@ -1384,6 +1417,7 @@ void main() {
   );
 }
 
+// Constrói os overlays (telas de interface) do jogo.
 Widget buildOverlay(BuildContext context, MyGame game, String overlayType) {
   switch (overlayType) {
     case 'MainMenu':
@@ -1590,9 +1624,7 @@ Widget buildOverlay(BuildContext context, MyGame game, String overlayType) {
               ),
               SizedBox(height: 20),
               Text(
-                matchHistory.isEmpty
-                    ? 'Nenhuma partida registrada'
-                    : matchHistory.join('\n'),
+                matchHistory.isEmpty ? 'Nenhuma partida registrada' : matchHistory.join('\n'),
                 style: TextStyle(color: Colors.white, fontSize: 24),
                 textAlign: TextAlign.center,
               ),
