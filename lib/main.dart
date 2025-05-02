@@ -1439,7 +1439,7 @@ Widget buildOverlay(BuildContext context, MyGame game, String overlayType) {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Jogo de Damas',
+                  'Jogo de Damas Tocantins',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 48,
