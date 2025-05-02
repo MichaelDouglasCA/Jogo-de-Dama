@@ -39,7 +39,7 @@ Este projeto reúne a lógica completa do jogo, interface gráfica intuitiva e u
 
 ```bash
 # Clone o repositório
-git clone https://github.com/SeuUsuario/Jogo-de-Dama.git
+git clone https://github.com/MichaelDouglasCA/Jogo-de-Dama.git
 cd Jogo-de-Dama
 
 # Execute o projeto
@@ -64,18 +64,22 @@ flutter run
 
 ```bash
 lib/
-├── ai/              # Lógica de inteligência artificial
-├── components/      # Peças, tabuleiro e sprites
-├── game/            # Lógica principal do jogo
-├── screens/         # Telas do app
-└── main.dart        # Ponto de entrada da aplicação
+└── main.dart        # Ponto de entrada da aplicação / Não há divisões em diversas partes
 ```
 
 ---
 
 ## 📸 Capturas de Tela (opcional)
 
-*Adicione aqui prints do jogo rodando no emulador ou navegador.*
+### Tela Inicial
+![Tela Inicial](Screenshots/tela1.png)
+
+### Tela de Dificuldade
+![Tela de Dificuldade](Screenshots/tela2.png)
+
+### Partida Contra IA
+![Tela Contra IA](Screenshots/tela3.png)
+
 
 ---
 
