@@ -1,7 +1,3 @@
-Claro! Aqui está uma versão melhorada e mais profissional do seu `README.md` para o repositório **Jogo-de-Dama Tocantins**, com seções claras e padronizadas para projetos no GitHub:
-
----
-
 ````markdown
 # ♟️ Jogo de Dama Tocantins
 
