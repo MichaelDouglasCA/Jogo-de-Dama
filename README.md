@@ -99,7 +99,7 @@ Este projeto está licenciado sob a [MIT License](LICENSE).
 
 ---
 
-## 🧑‍💻 Autor
+## 🧑‍💻 Autores
 
 Desenvolvido por **Michael Douglas** e **3d5onLP**  
 
