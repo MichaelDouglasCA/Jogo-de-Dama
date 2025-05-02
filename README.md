@@ -62,9 +62,9 @@ flutter run
 
 ## 📂 Estrutura do Projeto
 
-```bash
-lib/
-└── main.dart        # Ponto de entrada da aplicação / Não há divisões em diversas partes
+```bash              
+lib/        / Não há divisões em diversas partes, tudo em um unico arquivo! 
+└── main.dart        # Ponto de entrada da aplicação 
 ```
 
 ---
