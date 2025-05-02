@@ -1,2 +1,108 @@
-# Jogo-de-Dama
-Implementação de um jogo de damas usando o framework Flame. Este arquivo contém a lógica do jogo, interface gráfica e IA para partidas contra o computador.
+Claro! Aqui está uma versão melhorada e mais profissional do seu `README.md` para o repositório **Jogo-de-Dama Tocantins**, com seções claras e padronizadas para projetos no GitHub:
+
+---
+
+````markdown
+# ♟️ Jogo de Dama Tocantins
+
+Bem-vindo ao **Jogo de Dama Tocantins**, uma implementação do clássico jogo de damas utilizando o framework [Flame](https://flame-engine.org/), voltado para desenvolvimento de jogos 2D com Flutter.
+
+Este projeto reúne a lógica completa do jogo, interface gráfica intuitiva e uma inteligência artificial para partidas contra o computador.
+
+---
+
+## 🎮 Funcionalidades
+
+- ✅ Regras oficiais de Damas implementadas
+- 🧠 Modo de jogo contra IA
+- 🧑‍🤝‍🧑 Modo multiplayer local (em desenvolvimento)
+- 🎨 Interface gráfica interativa com Flutter + Flame
+- 🔄 Detecção de movimentos válidos e capturas
+- 🏆 Promoção automática para Dama
+
+---
+
+## 🧰 Tecnologias Utilizadas
+
+- [Flutter](https://flutter.dev/) – SDK de interface moderna
+- [Flame](https://flame-engine.org/) – Framework de jogos 2D para Flutter
+- [Dart](https://dart.dev/) – Linguagem de programação principal
+- [Flame Components](https://docs.flame-engine.org/) – Sistema de sprites, gestos e cenas
+
+---
+
+## 🚀 Como Executar o Projeto
+
+### Pré-requisitos
+
+- Flutter instalado ([Guia oficial](https://docs.flutter.dev/get-started/install))
+- Versão mínima recomendada: `Flutter 3.10` ou superior
+
+### Passos
+
+```bash
+# Clone o repositório
+git clone https://github.com/SeuUsuario/Jogo-de-Dama.git
+cd Jogo-de-Dama
+
+# Execute o projeto
+flutter run
+````
+
+---
+
+## 📱 Plataformas Suportadas
+
+| Plataforma | Suporte   |
+| ---------- | --------- |
+| ✅ Android  | Sim       |
+| ✅ Web      | Sim       |
+| ✅ Windows  | Sim       |
+| ⚠️ iOS     | Em testes |
+| ⚠️ macOS   | Em testes |
+
+---
+
+## 📂 Estrutura do Projeto
+
+```bash
+lib/
+├── ai/              # Lógica de inteligência artificial
+├── components/      # Peças, tabuleiro e sprites
+├── game/            # Lógica principal do jogo
+├── screens/         # Telas do app
+└── main.dart        # Ponto de entrada da aplicação
+```
+
+---
+
+## 📸 Capturas de Tela (opcional)
+
+*Adicione aqui prints do jogo rodando no emulador ou navegador.*
+
+---
+
+## 🙋‍♂️ Contribuindo
+
+Contribuições são bem-vindas! Sinta-se à vontade para:
+
+* Reportar bugs
+* Sugerir melhorias
+* Criar pull requests
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a [MIT License](LICENSE).
+
+---
+
+## 🧑‍💻 Autor
+
+Desenvolvido por **Michael Douglas**
+🔗 [github.com/MichaelDouglasCA](https://github.com/MichaelDouglasCA)
+
+---
+
+
